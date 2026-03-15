@@ -1,26 +1,23 @@
-import { Request, Response } from "express"
 import { UserRepository } from "../repositories/userRepository"
-import jwt from "jsonwebtoken"
 import bcrypt from "bcrypt"
+import jwt from "jsonwebtoken"
 
-export class AuthController {
+export class AuthService {
 
   private userRepository = new UserRepository()
 
-  async login(req: Request, res: Response) {
-
-    const { email, password } = req.body
+  async login(email: string, password: string) {
 
     const user = await this.userRepository.findByEmail(email)
 
     if (!user) {
-      return res.status(401).json({ message: "Invalid credentials" })
+      throw new Error("Invalid credentials")
     }
 
     const passwordMatch = await bcrypt.compare(password, user.password)
 
     if (!passwordMatch) {
-      return res.status(401).json({ message: "Invalid credentials" })
+      throw new Error("Invalid credentials")
     }
 
     const token = jwt.sign(
@@ -29,8 +26,7 @@ export class AuthController {
       { expiresIn: "1d" }
     )
 
-    return res.json({ token })
-
+    return { token }
   }
 
 }
